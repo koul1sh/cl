@@ -1,0 +1,54 @@
+import random
+
+# Create a list of servers, each with an ID and number of active connections
+def create_servers(num_servers):
+    return [{'id': i, 'connections': 0} for i in range(num_servers)]
+
+# Server handling a request (increment connections)
+def handle_request(server):
+    server['connections'] += 1
+
+# Show all servers and their connection counts
+def show_server_status(servers):
+    for server in servers:
+        print(f"Server {server['id']}: {server['connections']} connections")
+
+# Load balancing algorithms
+def round_robin(servers, rr_index):
+    server = servers[rr_index[0]]
+    rr_index[0] = (rr_index[0] + 1) % len(servers)
+    return server
+
+def least_connections(servers):
+    return min(servers, key=lambda s: s['connections'])
+
+def random_choice(servers):
+    return random.choice(servers)
+
+# Distribute requests to servers using chosen algorithm
+def distribute_requests(servers, num_requests, algorithm='round_robin'):
+    rr_index = [0]  # using list to allow mutation in function
+    for _ in range(num_requests):
+        if algorithm == 'round_robin':
+            server = round_robin(servers, rr_index)
+        elif algorithm == 'least_connections':
+            server = least_connections(servers)
+        elif algorithm == 'random':
+            server = random_choice(servers)
+        else:
+            raise ValueError("Invalid algorithm selected")
+        
+        handle_request(server)
+        print(f"Request sent to Server {server['id']}")
+
+# === Simulation ===
+if __name__ == "__main__":
+    servers = create_servers(4)
+    num_requests = 20
+    algorithm = 'least_connections'  # Change to 'round_robin' or 'random'
+
+    print(f"\nDistributing {num_requests} requests using {algorithm} algorithm...\n")
+    distribute_requests(servers, num_requests, algorithm)
+
+    print("\nServer Status After Distribution:")
+    show_server_status(servers)

@@ -1,0 +1,19 @@
+from mrjob.job import MRJob
+import re
+
+# Regular expression to match sentences ending with ., ?, or !
+SENTENCE_REGEXP = re.compile(r'[^.?!]*[.?!]')
+
+class MRSentenceCount(MRJob):
+    def mapper(self, _, line):
+        # Find all sentence-like substrings in the line
+        sentences = SENTENCE_REGEXP.findall(line)
+        for sentence in sentences:
+            if sentence.strip():  # Ensure it's not just whitespace
+                yield "Sentence", 1
+
+    def reducer(self, key, values):
+        yield key, sum(values)
+
+if __name__ == '__main__':
+    MRSentenceCount.run()

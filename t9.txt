@@ -1,0 +1,77 @@
+Clonal Selection Algorithm (CSA): Theory and Workflow
+The Clonal Selection Algorithm is an immune-inspired metaheuristic for optimization and pattern recognition, mimicking how B-cells in the biological immune system respond to antigens. The core ideas are:
+
+Affinity Measure
+
+In immunology, a B-cell’s “affinity” for an antigen measures how well its antibody binds to the antigen.
+
+In CSA, candidate solutions (“antibodies”) are evaluated by an objective (fitness) function against the problem context (“antigen”).
+
+Selection and Cloning
+
+The highest-affinity antibodies are selected to proliferate.
+
+Each selected antibody generates a set of “clones” proportional to its affinity: better solutions produce more copies.
+
+Hypermutation
+
+Clones undergo mutation at a rate inversely proportional to the parent’s affinity: high-affinity clones mutate less (exploitation), while low-affinity clones mutate more (exploration).
+
+Re-selection and Replacement
+
+All mutated clones are re-evaluated, and the best among them may replace poorer antibodies in the population, maintaining diversity and driving convergence.
+
+Metaparameters
+
+Population size (N): total number of antibodies.
+
+Selection size (n): how many top antibodies to clone each generation.
+
+Clone factor (β): determines how many clones each selected antibody produces (often β·N).
+
+Mutation scaling (ρ): controls mutation rate decay with affinity.
+
+How It Works in Code
+Initialization: initialize() creates N random vectors within the search bounds.
+
+Affinity Calculation: In affinity(), we transform the objective (func) into an affinity measure suitable for maximization; here we use 
+1
+/
+(
+1
++
+𝑓
+)
+1/(1+f).
+
+Selection: We pick the top-n antibodies by sorting descending on affinity.
+
+Cloning & Hypermutation (clone_and_hypermutate()):
+
+Each selected parent generates a number of clones proportional to its relative affinity.
+
+Mutation strength 
+𝜇
+=
+𝑒
+−
+𝜌
+⋅
+affinity
+μ=e 
+−ρ⋅affinity
+  ensures that high-affinity parents yield small perturbations.
+
+Gaussian noise is added and clipped to stay within bounds.
+
+Replacement: After evaluating clones, the best n clones replace the worst n individuals in the population.
+
+Iteration: We repeat for a fixed number of generations, tracking the globally best solution throughout.
+
+This framework can be adapted to other domains by:
+
+Changing the representation (e.g., bit-strings for binary problems).
+
+Redefining affinity() for classification or combinatorial objectives.
+
+Modulating cloning and hypermutation schemes for problem-specific exploration/exploitation balance.

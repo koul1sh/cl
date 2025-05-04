@@ -1,0 +1,72 @@
+import numpy as np
+import random
+
+# Simulated structural data (features): 0 = healthy, 1 = damaged
+# Each row is a structure's features, e.g., [vibration, strain, displacement]
+healthy_data = np.array([
+    [0.1, 0.2, 0.15],
+    [0.11, 0.18, 0.14],
+    [0.09, 0.21, 0.16]
+])
+
+damaged_data = np.array([
+    [0.5, 0.6, 0.55],
+    [0.52, 0.58, 0.53],
+    [0.48, 0.61, 0.56]
+])
+
+# Combine data for training
+training_data = np.vstack((healthy_data, damaged_data))
+labels = np.array([0]*len(healthy_data) + [1]*len(damaged_data))  # 0 = healthy, 1 = damaged
+
+class Antibody:
+    def __init__(self, pattern, label):
+        self.pattern = pattern
+        self.label = label
+        self.affinity = 0
+
+    def compute_affinity(self, antigen):
+        self.affinity = -np.linalg.norm(self.pattern - antigen)
+        return self.affinity
+
+
+class AISClassifier:
+    def __init__(self, num_clones=5):
+        self.memory_cells = []
+        self.num_clones = num_clones
+
+    def train(self, data, labels):
+        for i in range(len(data)):
+            new_antibody = Antibody(data[i], labels[i])
+            self.memory_cells.append(new_antibody)
+
+    def classify(self, sample):
+        # Clone and mutate
+        clones = []
+        for antibody in self.memory_cells:
+            for _ in range(self.num_clones):
+                mutated_pattern = antibody.pattern + np.random.normal(0, 0.01, size=antibody.pattern.shape)
+                clones.append(Antibody(mutated_pattern, antibody.label))
+
+        # Evaluate affinity
+        for clone in clones:
+            clone.compute_affinity(sample)
+
+        # Select best matching clone
+        best_clone = max(clones, key=lambda x: x.affinity)
+        return best_clone.label
+
+# Initialize and train classifier
+ais = AISClassifier()
+ais.train(training_data, labels)
+
+# Test on new samples
+test_samples = np.array([
+    [0.12, 0.19, 0.14],  # Should be healthy
+    [0.51, 0.59, 0.54]   # Should be damaged
+])
+
+print("=== Classification Results ===")
+for i, sample in enumerate(test_samples):
+    result = ais.classify(sample)
+    print(f"Test Sample {i+1}: {'Healthy' if result == 0 else 'Damaged'}")

@@ -1,0 +1,38 @@
+Ant Colony Optimization (ACO) is a bio-inspired metaheuristic whose mechanics are drawn from the foraging behavior of real ant colonies. When ants search for food, they deposit a volatile chemical called pheromone on the ground; other ants tend to follow paths marked by stronger pheromone concentrations, reinforcing good routes over time. Translating this to the Traveling Salesman Problem (TSP), we imagine a population of artificial “ants” that collectively explore possible tours of the cities, communicating indirectly via a pheromone matrix that lives on the edges between cities.
+
+Each ant builds a candidate tour by moving step-by-step from city to city. Its choice at each decision point is governed by two factors: the existing pheromone strength on each connecting edge (which captures the collective “memory” of past ants) and a heuristic desirability (often taken as the inverse of the distance to the next city). While heuristic desirability biases ants toward nearby cities, pheromone bias ensures that promising tours discovered in earlier iterations become increasingly attractive. No explicit formula is needed here—just the intuitive notion that shorter edges and heavily trafficked paths both draw ants.
+
+Once every ant has completed its tour, the algorithm evaluates each tour’s total length. Shorter tours are deemed higher quality, so their edges receive a proportionally larger pheromone deposit. At the same time, pheromone on all edges undergoes evaporation—a uniform decay—preventing the system from prematurely converging on suboptimal routes. Evaporation also allows the colony to “forget” poor early explorations, maintaining a balance between exploiting known good tours and exploring new ones.
+
+Over many iterations, this interplay of construction, evaluation, reinforcement, and evaporation causes the pheromone landscape to evolve: the best routes accumulate ever-stronger pheromone signals, guiding more and more ants along them. Meanwhile, evaporation keeps less-promising edges from monopolizing the search. As a result, the collective behavior of the ant population converges toward increasingly shorter tours, often finding near-optimal or optimal solutions to the TSP.
+
+In practical application, one carefully selects parameters like the number of ants, pheromone deposition strength, evaporation rate, and the relative weight given to pheromone versus heuristic. Tuning these controls the exploration–exploitation tradeoff: a slow evaporation rate and high pheromone weight drive rapid convergence (risking local optima), whereas strong evaporation or high heuristic weight favors exploration (at the cost of slower convergence). By iterating until a stopping criterion—such as a maximum number of iterations or a convergence threshold—is met, the ACO algorithm yields a highly competitive solution to the TSP without ever solving complex equations by hand.
+
+How It Works in Code
+Initialization
+
+pheromone is initialized uniformly (often to 1.0) for all city-pairs.
+
+heuristic is set to the inverse distance (with a small tweak to avoid division by zero on the diagonal).
+
+Solution Construction (_generate_solution)
+
+Each ant starts at a random city.
+
+Repeatedly selects the next city among the unvisited ones, using the probability formula combining pheromone (τᵢⱼ^α) and heuristic (ηᵢⱼ^β).
+
+Closes the loop by returning to the starting city and computes the total tour length.
+
+Pheromone Update (_update_pheromone)
+
+Evaporation: multiply all pheromone values by (1−ρ).
+
+Deposition: each ant deposits Q/L pheromone on each edge it has traversed, reinforcing shorter tours more strongly.
+
+Iteration & Best Solution Tracking
+
+After each iteration, we record the shortest tour found so far and print progress.
+
+Over many iterations, good routes attract more pheromone, biasing future ants toward them, while evaporation prevents premature convergence by gradually fading old trails.
+
+This implementation can be customized by tuning the parameters (α, β, ρ, Q), adjusting the number of ants or iterations, or integrating pheromone limits (τ_min, τ_max) for the MAX–MIN Ant System variant.
