@@ -1,11 +1,77 @@
-In a Java-RMI (Remote Method Invocation) system, the essence of distributed computation lies in the transparent invocation of methods on remote objects as if they were local. To build an application in which a client submits two strings to the server and the server returns their concatenation, you first define a **remote interface** that extends `java.rmi.Remote` and declares a method, say `String concat(String a, String b) throws RemoteException;`. This interface is shared by both client and server at compile time, ensuring that the client “knows” the shape of the remote service.
+1. Dataset: Iris Dataset
+The Iris dataset is a classic multivariate dataset introduced by Ronald Fisher.
 
-On the **server side**, you provide an implementation of this interface by subclassing `UnicastRemoteObject` (or exporting via `UnicastRemoteObject.exportObject`) and implementing the `concat` method to simply return `a + b`. At startup, the server must **instantiate** this implementation and bind it into the **RMI registry**—a name-to-remote-object lookup service—using `Naming.rebind("ConcatService", impl)`. Clients will later look up “ConcatService” in that registry.
+It consists of 150 samples of iris flowers from 3 species: Setosa, Versicolor, and Virginica.
 
-The **RMI registry** plays a critical orchestration role: it listens on a well-known TCP port (default 1099) and maps human-readable names to serialized stubs. When the server binds an object, the registry retains a proxy (the stub) that knows how to forward method calls and parameters over the network to the actual server object.
+Each sample has 4 features:
 
-On the **client side**, your application locates the registry (possibly on a remote host) via `Lookup lookup = Naming.lookup("//hostname/ConcatService");`, obtaining a stub that implements the same remote interface. When the client calls `lookup.concat("Hello, ", "World!")`, the stub transparently marshals the two string arguments, sends them over the network to the skeleton in the server’s JVM, invokes the real method on the server object, then marshals the resulting concatenated string back to the client. Both sides must handle `RemoteException` to cover network failures, and—if desired—you can configure a security manager or policy file to restrict or grant permissions.
+Sepal length
 
-Under the hood, RMI uses Java’s built-in serialization for parameters and return values, and dynamically loads stub classes if not already present on the client (via the codebase feature). To deploy, you start the registry (`rmiregistry`), launch the server (which binds its service), then run the client. During execution, the client perceives remote invocation as local, while the RMI runtime handles socket creation, object serialization, method dispatch, and garbage collection of unused remote objects.
+Sepal width
 
-In summary, a Java-RMI solution for string concatenation comprises (1) a remote interface defining the contract, (2) a server implementation that registers itself with RMI registry, and (3) a client that looks up the service and invokes its `concat` method. This design cleanly decouples interface (API) from implementation, leverages Java’s serialization for data transport, and provides transparent fault handling via checked `RemoteException`s, achieving a simple yet powerful paradigm for distributed computation.
+Petal length
+
+Petal width
+
+Goal: Predict the species based on these 4 features.
+
+2. Data Splitting: train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(...)
+This splits the dataset into training (80%) and testing (20%) sets.
+
+random_state=42 ensures reproducibility of the split.
+
+3. Feature Scaling: StandardScaler
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+Standardization ensures each feature has:
+
+Mean = 0
+
+Standard deviation = 1
+
+Helps algorithms like Logistic Regression converge faster and perform better because they are sensitive to feature scales.
+
+4. Model: Logistic Regression
+
+logreg = LogisticRegression()
+logreg.fit(X_train_scaled, y_train)
+Theory of Logistic Regression
+A linear classification algorithm.
+
+It predicts the probability of a class using the sigmoid function in binary classification or the softmax function in multiclass problems.
+
+For multiclass classification, LogisticRegression in scikit-learn uses one-vs-rest (OvR) strategy by default.
+
+For multiclass, probabilities are computed for all classes, and the class with the highest probability is chosen.
+
+5. Model Evaluation
+
+y_pred_train = logreg.predict(X_train_scaled)
+y_pred_test = logreg.predict(X_test_scaled)
+Predictions are made for both training and test sets.
+
+accuracy_score(y_train, y_pred_train)
+Accuracy: Proportion of correct predictions to total samples.
+
+Training Accuracy: Measures how well the model learned from the training data.
+
+Testing Accuracy: Measures generalization to unseen data.
+
+6. Classification Report
+
+print(classification_report(y_test, y_pred_test))
+Provides detailed performance metrics:
+
+Precision: 
+How many selected items are relevant?
+
+Recall (Sensitivity): 
+How many relevant items are selected?
+
+F1-score: Harmonic mean of precision and recall.
+
+Support: Number of actual occurrences of the class in the test set.

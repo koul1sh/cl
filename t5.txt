@@ -1,9 +1,70 @@
-MapReduce on Hadoop begins with a simple yet powerful programming model: you express your computation as two functions—Map and Reduce—while the framework magically handles parallel execution, data distribution, and fault recovery. Your input data lives in HDFS, where files are split into large, replicated blocks across DataNodes. When a job starts, YARN allocates containers on these nodes and launches mapper tasks, each reading one input split via the configured InputFormat (for text files, typically TextInputFormat). Inside each mapper’s map(key, value) method, you transform each record into zero or more intermediate key–value pairs. As these pairs accumulate in memory, Hadoop may apply an optional Combiner—often simply the same logic as your reducer—to pre‑aggregate values and reduce network traffic.
+🧠 What is MapReduce?
+MapReduce is a programming model developed by Google for processing large datasets with a parallel, distributed algorithm on a cluster.
 
-Once a mapper’s buffer fills or its input is exhausted, Hadoop partitions the intermediate pairs (by default using a hash of the key modulo the number of reducers), sorts them within each partition, and spills them to local disk. Reducers then fetch these spills—this “shuffle” stage is the heart of MapReduce’s scalability, moving only the minimum necessary data across the network. In each reducer, Hadoop merges and sorts all values for a given key, groups them, and invokes your reduce(key, Iterable<values>) method exactly once per unique key. Your reducer emits final output pairs, which are written back to HDFS via the chosen OutputFormat (e.g. TextOutputFormat), producing one output file per reducer.
+It consists of two main phases:
 
-Under the covers, Hadoop relies on its Writable serialization for native types like IntWritable and Text, but you can plug in richer formats—Avro schemas, Protocol Buffers, or Parquet—to gain schema evolution, richer data types, or columnar storage benefits. Custom Partitioners let you control which reducer sees which keys, and custom Comparators enable secondary sorting or bespoke grouping semantics. You’ll configure JVM reuse, buffer sizes, sort thresholds, and compression codecs (Snappy or Gzip) in your job’s XML or via the Configuration API to balance memory usage, CPU overhead, and disk or network I/O.
+1. Map Phase
+Each piece of input is processed independently.
 
-Resilience is baked into Hadoop’s design: if any map or reduce task crashes, YARN transparently retries it on another node up to the configured retry limit. To combat stragglers, speculative execution can launch duplicate tasks for the slowest 10 percent, taking the first to finish and thus reducing tail latency at the cost of extra resources. The ResourceManager and NodeManagers collaborate to schedule tasks ideally on nodes holding the data blocks (rack‐ or node‐local), minimizing remote reads; when the cluster is busy, tasks may run off‐rack but still make progress.
+Transforms the input data into intermediate key-value pairs.
 
-Finally, production‑grade MapReduce demands careful tuning and monitoring. Built‑in and user‑defined Counters track metrics such as records processed or malformed lines, visible through the YARN and JobHistory UIs alongside detailed logs. You choose the number of reducers to balance parallelism against per‑task overhead, enable compression to slash I/O costs, and—when you need more complex workflows—chain multiple MapReduce phases, use MultipleInputs or MultipleOutputs, or resort to streaming to leverage any scripting language. Security is enforced via Kerberos for both HDFS and YARN, with ACLs governing data and resource access, while YARN queues isolate multi‑tenant workloads. In this way, the humble MapReduce abstraction blossoms into a robust, scalable, and secure framework for processing petabytes of data.
+In this case: each word becomes a pair like (word, 1).
+
+2. Reduce Phase
+The framework groups all pairs by key and processes each group.
+
+Aggregates the intermediate data.
+
+Here: all values for the same word are summed to get total frequency.
+
+This approach allows parallel processing, making it ideal for big data platforms like Hadoop.
+
+🔍 Code Breakdown
+✅ Function Definition
+
+def map_reduce(file_path, target_word):
+Takes a file path and a target word as input.
+
+Returns the count of how many times the target word appears.
+
+🗺️ Map Phase
+
+mapped_data = [(word.lower(), 1) for line in file for word in line.strip().split()]
+Reads the file line by line.
+
+Splits each line into words.
+
+Creates a list of tuples (word, 1) — lowercase to ensure case-insensitive matching.
+
+Example:
+
+Line: "Tung is strong"
+Mapped: [('tung', 1), ('is', 1), ('strong', 1)]
+🔄 Reduce Phase
+
+for word, count in mapped_data:
+    if word == target_word.lower():
+        word_count += count
+Filters the mapped data to find only those pairs that match the target word.
+
+Adds up the counts for the word.
+
+🖨️ Final Output
+
+print(f"The word '{target_word}' appears {frequency} times.")
+Displays the total count of the target_word in the file.
+
+📝 Example Use Case
+file_path = 'G.txt': The file containing the text.
+
+target_word = "tung": The word we want to count.
+
+If 'Tung', 'tung', 'TUNG' appear in the file, they are all counted because of .lower().
+
+⚠️ Limitations
+It’s not a true parallel MapReduce — this is a single-threaded simulation.
+
+Splitting by .split() doesn’t remove punctuation, which may affect accuracy.
+
+No handling of very large files (wouldn't scale to big data without modification).
+

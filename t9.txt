@@ -1,77 +1,79 @@
-Clonal Selection Algorithm (CSA): Theory and Workflow
-The Clonal Selection Algorithm is an immune-inspired metaheuristic for optimization and pattern recognition, mimicking how B-cells in the biological immune system respond to antigens. The core ideas are:
+1. Create (Insert)
+Insert a single document:
 
-Affinity Measure
+  db.users.insertOne({ name: "Alice", age: 30, city: "Pune" });
+Insert multiple documents:
 
-In immunology, a B-cell’s “affinity” for an antigen measures how well its antibody binds to the antigen.
 
-In CSA, candidate solutions (“antibodies”) are evaluated by an objective (fitness) function against the problem context (“antigen”).
+  db.users.insertMany([
+    { name: "Bob", age: 25, city: "Mumbai" },
+    { name: "Charlie", age: 35, city: "Delhi" }
+  ]);
+These operations add new documents to the users collection.
 
-Selection and Cloning
 
-The highest-affinity antibodies are selected to proliferate.
 
-Each selected antibody generates a set of “clones” proportional to its affinity: better solutions produce more copies.
 
-Hypermutation
 
-Clones undergo mutation at a rate inversely proportional to the parent’s affinity: high-affinity clones mutate less (exploitation), while low-affinity clones mutate more (exploration).
 
-Re-selection and Replacement
 
-All mutated clones are re-evaluated, and the best among them may replace poorer antibodies in the population, maintaining diversity and driving convergence.
+🔍 2. Read (Query)
+Retrieve all documents:
 
-Metaparameters
+  db.users.find();
+Find documents with a specific condition:
 
-Population size (N): total number of antibodies.
 
-Selection size (n): how many top antibodies to clone each generation.
+  db.users.find({ city: "Pune" });
+Find a single document:
 
-Clone factor (β): determines how many clones each selected antibody produces (often β·N).
+  db.users.findOne({ name: "Alice" });
+These queries fetch documents from the users collection based on specified criteria.
 
-Mutation scaling (ρ): controls mutation rate decay with affinity.
 
-How It Works in Code
-Initialization: initialize() creates N random vectors within the search bounds.
 
-Affinity Calculation: In affinity(), we transform the objective (func) into an affinity measure suitable for maximization; here we use 
-1
-/
-(
-1
-+
-𝑓
-)
-1/(1+f).
 
-Selection: We pick the top-n antibodies by sorting descending on affinity.
 
-Cloning & Hypermutation (clone_and_hypermutate()):
 
-Each selected parent generates a number of clones proportional to its relative affinity.
 
-Mutation strength 
-𝜇
-=
-𝑒
-−
-𝜌
-⋅
-affinity
-μ=e 
-−ρ⋅affinity
-  ensures that high-affinity parents yield small perturbations.
+✏️ 3. Update
+Update a single document:
 
-Gaussian noise is added and clipped to stay within bounds.
 
-Replacement: After evaluating clones, the best n clones replace the worst n individuals in the population.
+  db.users.updateOne(
+    { name: "Alice" },
+    { $set: { age: 31 } }
+  );
+Update multiple documents:
 
-Iteration: We repeat for a fixed number of generations, tracking the globally best solution throughout.
+  db.users.updateMany(
+    { city: "Mumbai" },
+    { $set: { city: "Bangalore" } }
+  );
+Replace an entire document:
 
-This framework can be adapted to other domains by:
+  db.users.replaceOne(
+    { name: "Charlie" },
+    { name: "Charlie", age: 36, city: "Chennai" }
+  );
+These operations modify existing documents in the users collection. 
+MongoDB
 
-Changing the representation (e.g., bit-strings for binary problems).
 
-Redefining affinity() for classification or combinatorial objectives.
 
-Modulating cloning and hypermutation schemes for problem-specific exploration/exploitation balance.
+
+
+
+
+
+🗑️ 4. Delete
+Delete a single document:
+
+
+  db.users.deleteOne({ name: "Alice" });
+Delete multiple documents:
+
+
+  db.users.deleteMany({ city: "Bangalore" });
+These commands remove documents from the users collection.
+

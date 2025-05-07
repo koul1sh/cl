@@ -1,11 +1,55 @@
-In a Java-RMI (Remote Method Invocation) system, the essence of distributed computation lies in the transparent invocation of methods on remote objects as if they were local. To build an application in which a client submits two strings to the server and the server returns their concatenation, you first define a **remote interface** that extends `java.rmi.Remote` and declares a method, say `String concat(String a, String b) throws RemoteException;`. This interface is shared by both client and server at compile time, ensuring that the client “knows” the shape of the remote service.
+2. K-Means Clustering Algorithm
+🔍 What is K-Means?
+K-Means is an unsupervised clustering algorithm that partitions data into K non-overlapping clusters.
 
-On the **server side**, you provide an implementation of this interface by subclassing `UnicastRemoteObject` (or exporting via `UnicastRemoteObject.exportObject`) and implementing the `concat` method to simply return `a + b`. At startup, the server must **instantiate** this implementation and bind it into the **RMI registry**—a name-to-remote-object lookup service—using `Naming.rebind("ConcatService", impl)`. Clients will later look up “ConcatService” in that registry.
+Each data point belongs to the cluster with the nearest mean (centroid).
 
-The **RMI registry** plays a critical orchestration role: it listens on a well-known TCP port (default 1099) and maps human-readable names to serialized stubs. When the server binds an object, the registry retains a proxy (the stub) that knows how to forward method calls and parameters over the network to the actual server object.
+⚙️ Steps of K-Means:
+Choose the number of clusters (K).
 
-On the **client side**, your application locates the registry (possibly on a remote host) via `Lookup lookup = Naming.lookup("//hostname/ConcatService");`, obtaining a stub that implements the same remote interface. When the client calls `lookup.concat("Hello, ", "World!")`, the stub transparently marshals the two string arguments, sends them over the network to the skeleton in the server’s JVM, invokes the real method on the server object, then marshals the resulting concatenated string back to the client. Both sides must handle `RemoteException` to cover network failures, and—if desired—you can configure a security manager or policy file to restrict or grant permissions.
+Initialize K centroids randomly.
 
-Under the hood, RMI uses Java’s built-in serialization for parameters and return values, and dynamically loads stub classes if not already present on the client (via the codebase feature). To deploy, you start the registry (`rmiregistry`), launch the server (which binds its service), then run the client. During execution, the client perceives remote invocation as local, while the RMI runtime handles socket creation, object serialization, method dispatch, and garbage collection of unused remote objects.
+Assign each data point to the nearest centroid (based on Euclidean distance).
 
-In summary, a Java-RMI solution for string concatenation comprises (1) a remote interface defining the contract, (2) a server implementation that registers itself with RMI registry, and (3) a client that looks up the service and invokes its `concat` method. This design cleanly decouples interface (API) from implementation, leverages Java’s serialization for data transport, and provides transparent fault handling via checked `RemoteException`s, achieving a simple yet powerful paradigm for distributed computation.
+Update centroids by calculating the mean of all points in each cluster.
+
+Repeat steps 3–4 until centroids do not change significantly (convergence).
+
+kmeans = KMeans(n_clusters=3)
+kmeans.fit(X)
+n_clusters=3: We expect 3 natural clusters (as there are 3 species in the dataset).
+
+fit(X): Runs the K-means algorithm on the feature data X.
+
+📌 Key Terms:
+Centroids: Mean positions of each cluster.
+
+Labels: Assigned cluster ID (0, 1, or 2) for each sample.
+
+📈 3. Visualization
+
+plt.scatter(X[:, 0], X[:, 1], c=labels, cmap='viridis')
+Plots the first two features (for simplicity) of each point.
+
+Colors them by their cluster labels (c=labels).
+
+plt.scatter(centroids[:, 0], centroids[:, 1], marker='X', s=200, c='red')
+Marks the cluster centroids with red "X" symbols.
+
+🧠 Unsupervised Learning Context
+Unlike supervised learning:
+
+There is no ground truth or target y.
+
+The algorithm finds patterns or groupings in the data based on similarity.
+
+Useful for exploratory data analysis, customer segmentation, etc.
+
+📊 Evaluation (Not in Code)
+Because it's unsupervised, accuracy metrics like in classification don't directly apply. Common evaluation methods include:
+
+Inertia: Sum of squared distances to the closest cluster center.
+
+Silhouette score: Measures how well each point fits into its cluster vs others.
+
+Comparing labels with ground truth (if known): e.g., via confusion matrix or adjusted Rand index.

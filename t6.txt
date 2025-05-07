@@ -1,9 +1,110 @@
-MapReduce on Hadoop begins with a simple yet powerful programming model: you express your computation as two functions—Map and Reduce—while the framework magically handles parallel execution, data distribution, and fault recovery. Your input data lives in HDFS, where files are split into large, replicated blocks across DataNodes. When a job starts, YARN allocates containers on these nodes and launches mapper tasks, each reading one input split via the configured InputFormat (for text files, typically TextInputFormat). Inside each mapper’s map(key, value) method, you transform each record into zero or more intermediate key–value pairs. As these pairs accumulate in memory, Hadoop may apply an optional Combiner—often simply the same logic as your reducer—to pre‑aggregate values and reduce network traffic.
+1. What is Power BI?
+Power BI is a business analytics tool by Microsoft that enables users to visualize data, share insights, and make informed decisions by transforming raw data into interactive dashboards and reports. 
+Simplilearn.com
 
-Once a mapper’s buffer fills or its input is exhausted, Hadoop partitions the intermediate pairs (by default using a hash of the key modulo the number of reducers), sorts them within each partition, and spills them to local disk. Reducers then fetch these spills—this “shuffle” stage is the heart of MapReduce’s scalability, moving only the minimum necessary data across the network. In each reducer, Hadoop merges and sorts all values for a given key, groups them, and invokes your reduce(key, Iterable<values>) method exactly once per unique key. Your reducer emits final output pairs, which are written back to HDFS via the chosen OutputFormat (e.g. TextOutputFormat), producing one output file per reducer.
+2. Why should we use Power BI?
+Power BI offers user-friendly interfaces, integrates seamlessly with various data sources, and provides powerful data modeling and visualization capabilities, making it suitable for both technical and non-technical users. 
+Simplilearn.com
 
-Under the covers, Hadoop relies on its Writable serialization for native types like IntWritable and Text, but you can plug in richer formats—Avro schemas, Protocol Buffers, or Parquet—to gain schema evolution, richer data types, or columnar storage benefits. Custom Partitioners let you control which reducer sees which keys, and custom Comparators enable secondary sorting or bespoke grouping semantics. You’ll configure JVM reuse, buffer sizes, sort thresholds, and compression codecs (Snappy or Gzip) in your job’s XML or via the Configuration API to balance memory usage, CPU overhead, and disk or network I/O.
+3. What are the main components of Power BI?
 
-Resilience is baked into Hadoop’s design: if any map or reduce task crashes, YARN transparently retries it on another node up to the configured retry limit. To combat stragglers, speculative execution can launch duplicate tasks for the slowest 10 percent, taking the first to finish and thus reducing tail latency at the cost of extra resources. The ResourceManager and NodeManagers collaborate to schedule tasks ideally on nodes holding the data blocks (rack‐ or node‐local), minimizing remote reads; when the cluster is busy, tasks may run off‐rack but still make progress.
+Power BI Desktop: A Windows application for creating reports.
 
-Finally, production‑grade MapReduce demands careful tuning and monitoring. Built‑in and user‑defined Counters track metrics such as records processed or malformed lines, visible through the YARN and JobHistory UIs alongside detailed logs. You choose the number of reducers to balance parallelism against per‑task overhead, enable compression to slash I/O costs, and—when you need more complex workflows—chain multiple MapReduce phases, use MultipleInputs or MultipleOutputs, or resort to streaming to leverage any scripting language. Security is enforced via Kerberos for both HDFS and YARN, with ACLs governing data and resource access, while YARN queues isolate multi‑tenant workloads. In this way, the humble MapReduce abstraction blossoms into a robust, scalable, and secure framework for processing petabytes of data.
+Power BI Service: An online SaaS for sharing and collaboration.
+
+Power BI Mobile: Mobile apps for viewing reports.
+
+Power BI Gateway: Bridges on-premises data with cloud services.
+
+Power BI Report Server: An on-premises report server for publishing reports within the organization. 
+Medium
+
+4. What data sources can Power BI connect to?
+Power BI can connect to a wide range of data sources, including Excel, SQL Server, Azure, SharePoint, Salesforce, and many others. 
+Reddit
+
+5. What are the different types of visualizations in Power BI?
+Power BI supports various visualizations such as bar charts, line charts, pie charts, maps, tables, matrices, and custom visuals from the marketplace. 
+Medium
+
+🏗️ Data Modeling & Relationships
+6. What is a data model in Power BI?
+A data model in Power BI is a collection of tables with relationships that allow for efficient data analysis and reporting.
+
+7. How do relationships work in Power BI?
+Relationships in Power BI define how data in one table relates to data in another. They can be one-to-one, one-to-many, or many-to-many.
+
+8. What is the difference between a star schema and a snowflake schema?
+
+Star Schema: A central fact table connected to dimension tables.
+
+Snowflake Schema: A more normalized form where dimension tables are further broken down into sub-dimensions.
+
+9. What are cardinality and cross filter direction?
+
+Cardinality: Defines the nature of the relationship (e.g., one-to-many).
+
+Cross Filter Direction: Determines how filters flow between tables in a relationship.
+
+10. What is the use of "Composite Models"?
+Composite models allow combining data from different sources, enabling both DirectQuery and Import modes in a single report.
+
+🧮 DAX (Data Analysis Expressions)
+11. What is DAX in Power BI?
+DAX is a formula language used in Power BI for creating custom calculations and aggregations on data. 
+Medium
+
+12. Explain the difference between SUM() and SUMX().
+
+SUM(): Adds up all values in a single column.
+
+SUMX(): Iterates over a table, evaluating an expression for each row and then summing the results.
+
+13. What is the purpose of CALCULATE() in DAX?
+CALCULATE() evaluates an expression in a modified filter context, allowing for complex calculations.
+
+14. How does ALL() work in DAX?
+ALL() removes filters from a table or column, returning all rows regardless of any filters applied.
+
+15. What is row context vs filter context in DAX?
+
+Row Context: The context of a single row during calculations.
+
+Filter Context: The set of filters applied to data during evaluation.
+
+📊 Visualization & Reporting
+16. How do slicers work in Power BI?
+Slicers are visual filters that allow users to segment data dynamically within reports.
+
+17. What are bookmarks, and how are they used?
+Bookmarks capture the current state of a report page, including filters and visuals, allowing users to navigate between different views.
+
+18. What is drillthrough in Power BI?
+Drillthrough enables users to navigate from one report page to another, focusing on a specific data point or context.
+
+19. What is the difference between page-level and report-level filters?
+
+Page-Level Filters: Apply to a single report page.
+
+Report-Level Filters: Apply to all pages within the report.
+
+20. What is conditional formatting in Power BI?
+Conditional formatting allows for dynamic styling of visuals based on data values, enhancing report readability.
+
+🔒 Security & Access Control
+21. What is Row-Level Security (RLS)?
+RLS restricts data access for users based on filters defined within roles, ensuring users see only data pertinent to them.
+
+22. How can you implement RLS in Power BI Desktop?
+By defining roles and DAX filters under the "Modeling" tab and assigning users to these roles in the Power BI Service.
+
+23. What is the difference between static and dynamic RLS?
+
+Static RLS: Fixed filters applied to roles.
+
+Dynamic RLS: Filters based on user attributes, allowing for more flexible access control.
+
+24. How is data security managed when publishing reports to the service?
+Through workspace permissions, RLS, and dataset security settings in the Power BI Service.
+
+25. Can users with access to the report edit the underlying dataset?

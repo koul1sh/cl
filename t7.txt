@@ -1,9 +1,85 @@
-MapReduce on Hadoop begins with a simple yet powerful programming model: you express your computation as two functions—Map and Reduce—while the framework magically handles parallel execution, data distribution, and fault recovery. Your input data lives in HDFS, where files are split into large, replicated blocks across DataNodes. When a job starts, YARN allocates containers on these nodes and launches mapper tasks, each reading one input split via the configured InputFormat (for text files, typically TextInputFormat). Inside each mapper’s map(key, value) method, you transform each record into zero or more intermediate key–value pairs. As these pairs accumulate in memory, Hadoop may apply an optional Combiner—often simply the same logic as your reducer—to pre‑aggregate values and reduce network traffic.
+1. Origins and Motivation
+Big Data Challenge
+Traditional, single‐machine algorithms buckle under massive datasets (terabytes–petabytes). Google introduced MapReduce (2004) to let thousands of commodity servers jointly process enormous web‑scale data reliably and efficiently.
 
-Once a mapper’s buffer fills or its input is exhausted, Hadoop partitions the intermediate pairs (by default using a hash of the key modulo the number of reducers), sorts them within each partition, and spills them to local disk. Reducers then fetch these spills—this “shuffle” stage is the heart of MapReduce’s scalability, moving only the minimum necessary data across the network. In each reducer, Hadoop merges and sorts all values for a given key, groups them, and invokes your reduce(key, Iterable<values>) method exactly once per unique key. Your reducer emits final output pairs, which are written back to HDFS via the chosen OutputFormat (e.g. TextOutputFormat), producing one output file per reducer.
+Functional Roots
+MapReduce borrows from the functional programming primitives:
 
-Under the covers, Hadoop relies on its Writable serialization for native types like IntWritable and Text, but you can plug in richer formats—Avro schemas, Protocol Buffers, or Parquet—to gain schema evolution, richer data types, or columnar storage benefits. Custom Partitioners let you control which reducer sees which keys, and custom Comparators enable secondary sorting or bespoke grouping semantics. You’ll configure JVM reuse, buffer sizes, sort thresholds, and compression codecs (Snappy or Gzip) in your job’s XML or via the Configuration API to balance memory usage, CPU overhead, and disk or network I/O.
+map(f, collection) applies a function f to every element, yielding intermediary results.
 
-Resilience is baked into Hadoop’s design: if any map or reduce task crashes, YARN transparently retries it on another node up to the configured retry limit. To combat stragglers, speculative execution can launch duplicate tasks for the slowest 10 percent, taking the first to finish and thus reducing tail latency at the cost of extra resources. The ResourceManager and NodeManagers collaborate to schedule tasks ideally on nodes holding the data blocks (rack‐ or node‐local), minimizing remote reads; when the cluster is busy, tasks may run off‐rack but still make progress.
+reduce(g, collection) aggregates those results using a binary operator g.
 
-Finally, production‑grade MapReduce demands careful tuning and monitoring. Built‑in and user‑defined Counters track metrics such as records processed or malformed lines, visible through the YARN and JobHistory UIs alongside detailed logs. You choose the number of reducers to balance parallelism against per‑task overhead, enable compression to slash I/O costs, and—when you need more complex workflows—chain multiple MapReduce phases, use MultipleInputs or MultipleOutputs, or resort to streaming to leverage any scripting language. Security is enforced via Kerberos for both HDFS and YARN, with ACLs governing data and resource access, while YARN queues isolate multi‑tenant workloads. In this way, the humble MapReduce abstraction blossoms into a robust, scalable, and secure framework for processing petabytes of data.
+2. Logical Data Flow
+A. Map Phase
+Input: A collection of records (e.g., lines in text, rows in logs).
+
+Operation: User‑supplied Map function takes each record and emits zero or more key‑value 
+Goal: Extract the “keys” you care about (words, user IDs, timestamps) along with partial values.
+
+B. Shuffle & Sort
+Partitioning: All emitted pairs are grouped by key across the cluster—this is often called the “shuffle.”
+
+Sorting: Within each partition, keys are sorted so that all values for the same key are collated.
+
+C. Reduce Phase
+Input: For each unique key K, the framework provides the list of values 
+
+Operation: User‑supplied Reduce function processes these lists to produce final output 
+Goal: Aggregate, filter, or otherwise summarize per‑key data (e.g., sums, averages, concatenations).
+
+3. Execution Architecture
+Master Node
+Coordinates the job: splits input, schedules Map/Reduce tasks, monitors progress, handles failures.
+
+Worker Nodes
+Run Map tasks on input splits, write intermediate files.
+Run Reduce tasks on shuffled data partitions, write final results.
+
+Reliability
+If a worker fails, the master reassigns its tasks to other nodes (thanks to idempotent, stateless Map/Reduce functions).
+
+Data Locality
+Scheduler tries to run Map tasks on nodes where the data block already resides, minimizing network I/O.
+
+4. Performance Optimizations
+Combiners
+A “mini‐reduce” that runs on Map outputs locally, pre‑aggregating values (e.g., summing word counts before shuffle) to cut down network traffic.
+
+Partitioners
+Control how keys are assigned to reducers (e.g., hash-based or range-based), balancing load across reducers.
+
+Speculative Execution
+Slow “straggler” tasks are redundantly launched elsewhere; the one that finishes first wins, speeding up the overall job.
+
+5. Fault Tolerance & Scalability
+Stateless Tasks
+Map and Reduce functions do not share mutable state; they rely solely on their input. This makes re‑execution trivial if a node fails.
+
+Lineage Tracking
+The master knows how to recompute any lost intermediate data from the original inputs.
+
+Horizontal Scaling
+More nodes → more parallel Map/Reduce slots → near‐linear speedup (until bottlenecks like network or disk I/O dominate).
+
+6. Use Cases
+Batch Analytics
+– Word‐count, log analysis, inverted index construction
+
+Data Transformation
+– ETL (extract‑transform‑load) pipelines, format conversions
+
+Graph Processing (via iterative MapReduce)
+– PageRank, connected components
+
+Machine Learning
+– Distributed computations of model parameters (e.g., aggregating gradients)
+
+7. Limitations & Successors
+High Latency
+MapReduce jobs have nontrivial startup, shuffle, and teardown overhead—unsuited for real‑time analytics.
+
+Iterative Algorithms
+Each iteration spins up a full MapReduce job; frameworks like Apache Spark or Flink with in‑memory persistence offer dramatic speedups for iterative workloads.
+
+Rigid Programming Model
+Only two stages (map, reduce); more complex pipelines require chaining multiple jobs

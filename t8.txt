@@ -1,17 +1,58 @@
-In this simulation, we model a pool of stateless “Server” instances and a number of concurrent “Client” requests being funneled through a “LoadBalancer” that implements interchangeable strategies—here, Round-Robin and Least-Connections. Each Server simply tracks how many requests it is currently handling. The LoadBalancer maintains a list of servers and, upon each incoming request, consults its selected strategy object to pick the next server. In Round-Robin, we cycle through the list in turn; in Least-Connections, we pick whichever server currently has the fewest active requests. To simulate concurrency, we spin up a fixed thread pool and submit N dummy “requests,” each of which asks the LoadBalancer to dispatch it, waits a random short time to mimic processing, then signals completion so that the server’s active-request count is decremented. This setup demonstrates how different algorithms distribute load under simulated client bursts, and you can switch strategies at runtime by simply plugging in a different implementation of the LoadBalancingStrategy interface.
+1. MapReduce Paradigm
+MapReduce is a computational framework designed for parallel and distributed processing of large-scale data.
 
-How it works in detail:
+It splits data processing into two main stages:
 
-Server instances use an AtomicInteger to track their current load (activeRequests). When handleRequest is called, the counter increments, work is simulated on a separate thread (sleeping briefly), and then the counter decrements upon completion.
+Map: Filters, transforms, or restructures data into intermediate key-value form.
 
-LoadBalancingStrategy is a simple interface with a single method selectServer(). We provide two implementations:
+Reduce: Aggregates or summarizes data based on keys or groupings.
 
-RoundRobinStrategy keeps a globally incremented index and uses modulo arithmetic to cycle through the server list.
+Even though the implementation here is not distributed, the logical pattern of Map → Reduce is preserved in the way data is filtered and then summarized.
 
-LeastConnectionsStrategy scans all servers and picks the one with the fewest activeRequests.
+2. DataFrame as a Dataset
+In Pandas, a DataFrame serves as a tabular dataset, similar to a database table or spreadsheet.
 
-LoadBalancer holds the server list and a mutable strategy. Requests arrive via handleRequest(), which delegates choice to the current strategy. You can change strategies at runtime through setStrategy().
+It allows for:
 
-In LoadBalancerSimulation, we instantiate three servers and a load balancer (initially with Round-Robin). We use a fixed thread pool to simulate concurrent clients submitting 30 requests, coordinating with a CountDownLatch to wait until all have been dispatched. After that batch completes, we switch to Least-Connections and repeat.
+Column-based filtering (used in the "map" step)
 
-By examining the printed output, you’ll see how Round-Robin strictly rotates requests (regardless of current load), whereas Least-Connections adapts in real time, favoring any server whose simulated work has already completed faster. This illustrates both static and dynamic load-balancing approaches in a concise, configurable framework.
+Group-based aggregation (used in the "reduce" step)
+
+This supports in-memory analytics at high speed for moderate-sized data.
+
+3. Filtering (Map Phase)
+Filtering rows based on Boolean conditions simulates the map operation.
+
+Example: Selecting all rows where Survived == 0 and Sex == 'male' is equivalent to extracting key-specific records in a MapReduce system.
+
+4. Aggregation (Reduce Phase)
+Aggregation functions such as:
+
+.mean() — for computing average values
+
+.value_counts() — for counting occurrences per group
+
+These replicate the reduction phase, where intermediate data are consolidated into summary statistics.
+
+5. Statistical Summarization
+Computing mean age gives insight into demographic patterns among deceased males.
+
+Value counts by class highlight survival trends by socioeconomic factors among deceased females.
+
+This reflects typical use cases in exploratory data analysis (EDA) and descriptive statistics.
+
+6. Application: Titanic Dataset
+Commonly used for educational purposes in data science.
+
+Contains demographic and survival data for passengers.
+
+Serves as an example to apply conditional filtering, grouped aggregation, and data summarization.
+
+7. Non-distributed MapReduce Simulation
+While traditional MapReduce is meant for distributed environments (like Hadoop or Spark), Pandas enables:
+
+A local, in-memory simulation
+
+Sequential execution of Map and Reduce logic
+
+A clear demonstration of data-processing stages

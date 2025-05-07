@@ -1,15 +1,110 @@
-A distributed factorial service built on Remote Procedure Call (RPC) begins with the fundamental premise of treating a remote computation—here, the calculation of n!—as if it were a local procedure call. Under the covers, however, the client and server each incorporate specialized “stubs” (client stub and server stub) that automatically marshal (serialize) function arguments into a network‐friendly format, transmit them over a chosen transport (such as TCP or HTTP/2), and then unmarshal (deserialize) the data on the other side. This stub‐based abstraction hides the complexity of networking from application programmers: clients invoke a Factorial(n) function call in their code, and stubs handle packing n into a message, sending it to the server, awaiting the response, and returning the computed result back to the caller.
+1. What is Power BI?
+Power BI is a business analytics tool by Microsoft that enables users to visualize data, share insights, and make informed decisions by transforming raw data into interactive dashboards and reports. 
+Simplilearn.com
 
-Defining the precise interface for such an RPC service typically involves an Interface Definition Language (IDL), which is a language‐neutral schema describing available service methods and data types. For our factorial service, an IDL specification would declare a method like long Factorial(in long n) throws InvalidArgument;, making explicit that inputs below zero (or above some practical maximum) should trigger an error. From this IDL, tooling can generate strongly typed client proxies and server skeletons in multiple programming languages, ensuring that both ends agree on data layouts, error codes, and versioning.
+2. Why should we use Power BI?
+Power BI offers user-friendly interfaces, integrates seamlessly with various data sources, and provides powerful data modeling and visualization capabilities, making it suitable for both technical and non-technical users. 
+Simplilearn.com
 
-Communication semantics in RPC can be either synchronous or asynchronous. In a synchronous call, the client blocks until the server computes the factorial and returns; this is simple to program but can tie up threads under high latency. Asynchronous RPC allows the client to dispatch a request and continue doing other work, later retrieving the result via callbacks, futures, or polling. Semantics around failure—at‐most‐once versus at‐least‐once execution—must also be chosen. With “at‐most‐once,” the system ensures that even on retries it will not compute n! more than once, avoiding duplicate side effects (though factorial is idempotent). With “at‐least‐once,” retries may lead to multiple executions, which is typically safe for pure mathematical functions but must be handled carefully if stateful operations are introduced.
+3. What are the main components of Power BI?
 
-The choice of transport and wire format plays a significant role in performance and interoperability. Binary protocols such as Protocol Buffers or Apache Thrift yield compact, efficient encodings, reducing bandwidth and serialization overhead. Textual protocols like JSON‐RPC or XML‐RPC, by contrast, are human‐readable and easier to debug but carry greater message size. Underlying transports—reliable, ordered TCP versus connectionless UDP—further influence design: UDP-based RPC must incorporate its own mechanisms for packet loss, retransmission, and ordering.
+Power BI Desktop: A Windows application for creating reports.
 
-On the server side, concurrency models range from a simple thread‐per‐request (where each incoming RPC is handled by a dedicated thread) to event‐driven architectures using nonblocking I/O and worker pools. Stateless servers—where each request is independent—scale more readily behind load balancers, allowing multiple instances to serve factorial requests without complex session management. Performance optimizations such as memoization or caching of recent factorial results can slash computation time for hot values, while batching requests can amortize network latency when clients need multiple factorials at once.
+Power BI Service: An online SaaS for sharing and collaboration.
 
-The client likewise must manage timeouts, retries, and error handling. A sensible timeout prevents a hung or slow server from blocking client resources indefinitely; exponential back‐off algorithms help avoid overwhelming a recovering server with retry storms. RPC frameworks often translate server‐thrown exceptions (like InvalidArgument) into client‐side exceptions or error codes, enabling developers to design robust recovery logic or user‐friendly error messages.
+Power BI Mobile: Mobile apps for viewing reports.
 
-Finally, any production‐grade RPC service must consider security and reliability. Transport‐level encryption (TLS) protects the confidentiality and integrity of factorial requests and results. Authentication schemes—ranging from API keys to mutual TLS or OAuth tokens—ensure that only authorized clients can invoke the service, while authorization policies can limit usage to certain integer ranges or rate‐limit calls per user. To achieve high availability, multiple server replicas can run behind a load balancer, with health checks removing unhealthy instances and circuit breakers preventing cascading failures if the compute cluster becomes overloaded.
+Power BI Gateway: Bridges on-premises data with cloud services.
 
-In sum, designing a distributed factorial application via RPC involves more than writing a simple loop for n!. It requires a holistic approach—defining precise interfaces, choosing appropriate marshalling and transport layers, architecting for concurrency and fault tolerance, and embedding security—so that callers enjoy the illusion of a local function call while benefiting from the scalability and resilience of a distributed system.
+Power BI Report Server: An on-premises report server for publishing reports within the organization. 
+Medium
+
+4. What data sources can Power BI connect to?
+Power BI can connect to a wide range of data sources, including Excel, SQL Server, Azure, SharePoint, Salesforce, and many others. 
+Reddit
+
+5. What are the different types of visualizations in Power BI?
+Power BI supports various visualizations such as bar charts, line charts, pie charts, maps, tables, matrices, and custom visuals from the marketplace. 
+Medium
+
+🏗️ Data Modeling & Relationships
+6. What is a data model in Power BI?
+A data model in Power BI is a collection of tables with relationships that allow for efficient data analysis and reporting.
+
+7. How do relationships work in Power BI?
+Relationships in Power BI define how data in one table relates to data in another. They can be one-to-one, one-to-many, or many-to-many.
+
+8. What is the difference between a star schema and a snowflake schema?
+
+Star Schema: A central fact table connected to dimension tables.
+
+Snowflake Schema: A more normalized form where dimension tables are further broken down into sub-dimensions.
+
+9. What are cardinality and cross filter direction?
+
+Cardinality: Defines the nature of the relationship (e.g., one-to-many).
+
+Cross Filter Direction: Determines how filters flow between tables in a relationship.
+
+10. What is the use of "Composite Models"?
+Composite models allow combining data from different sources, enabling both DirectQuery and Import modes in a single report.
+
+🧮 DAX (Data Analysis Expressions)
+11. What is DAX in Power BI?
+DAX is a formula language used in Power BI for creating custom calculations and aggregations on data. 
+Medium
+
+12. Explain the difference between SUM() and SUMX().
+
+SUM(): Adds up all values in a single column.
+
+SUMX(): Iterates over a table, evaluating an expression for each row and then summing the results.
+
+13. What is the purpose of CALCULATE() in DAX?
+CALCULATE() evaluates an expression in a modified filter context, allowing for complex calculations.
+
+14. How does ALL() work in DAX?
+ALL() removes filters from a table or column, returning all rows regardless of any filters applied.
+
+15. What is row context vs filter context in DAX?
+
+Row Context: The context of a single row during calculations.
+
+Filter Context: The set of filters applied to data during evaluation.
+
+📊 Visualization & Reporting
+16. How do slicers work in Power BI?
+Slicers are visual filters that allow users to segment data dynamically within reports.
+
+17. What are bookmarks, and how are they used?
+Bookmarks capture the current state of a report page, including filters and visuals, allowing users to navigate between different views.
+
+18. What is drillthrough in Power BI?
+Drillthrough enables users to navigate from one report page to another, focusing on a specific data point or context.
+
+19. What is the difference between page-level and report-level filters?
+
+Page-Level Filters: Apply to a single report page.
+
+Report-Level Filters: Apply to all pages within the report.
+
+20. What is conditional formatting in Power BI?
+Conditional formatting allows for dynamic styling of visuals based on data values, enhancing report readability.
+
+🔒 Security & Access Control
+21. What is Row-Level Security (RLS)?
+RLS restricts data access for users based on filters defined within roles, ensuring users see only data pertinent to them.
+
+22. How can you implement RLS in Power BI Desktop?
+By defining roles and DAX filters under the "Modeling" tab and assigning users to these roles in the Power BI Service.
+
+23. What is the difference between static and dynamic RLS?
+
+Static RLS: Fixed filters applied to roles.
+
+Dynamic RLS: Filters based on user attributes, allowing for more flexible access control.
+
+24. How is data security managed when publishing reports to the service?
+Through workspace permissions, RLS, and dataset security settings in the Power BI Service.
+
+25. Can users with access to the report edit the underlying dataset?
